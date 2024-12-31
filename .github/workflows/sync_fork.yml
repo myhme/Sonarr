@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: tgymnich/fork-sync@v2
         with:
-          token: ${{ secrets.PERSONAL_TOKEN }}
+          token: ${{ secrets.REPOSITORY_ACCESS_TOKEN }}
           owner: Sonarr
           base: main
           head: main
