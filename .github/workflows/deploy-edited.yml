@@ -1,0 +1,149 @@
+name: Deploy
+
+on:
+  workflow_call:
+    inputs:
+      framework: 
+        description: '.net framework'
+        type: string
+        required: true
+      branch:
+        description: 'Git branch used for this build'
+        type: string
+        required: true
+      major_version:
+        description: 'Sonarr major version'
+        type: string
+        required: true
+      version:
+        description: 'Sonarr version'
+        type: string
+        required: true
+
+jobs:
+  package:
+    strategy:
+      matrix:
+        platform: [linux]
+        include:
+          - platform: linux
+            os: ubuntu-latest
+
+    runs-on: ${{ matrix.os }}
+    steps:
+    - name: Check out
+      uses: actions/checkout@v4
+
+    - name: Package
+      uses: ./.github/actions/package-edited
+      with:
+        framework: ${{ inputs.framework }}
+        platform: ${{ matrix.platform }}
+        artifact: build_${{ matrix.platform }}
+        branch: ${{ inputs.branch }}
+        major_version: ${{ inputs.major_version }}
+        version: ${{ inputs.version }}
+
+  release:
+    needs: package
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+    - name: Check out
+      uses: actions/checkout@v4
+
+    - name: Download release artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: _artifacts
+        pattern: release_*
+        merge-multiple: true
+
+    - name: Generate Release Notes
+      id: generate-release-notes
+      uses: actions/github-script@v7
+      with:
+        github-token: ${{ github.token }}
+        result-encoding: string
+        script: |
+          const { data } = await github.rest.repos.generateReleaseNotes({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            tag_name: 'v${{ inputs.version }}',
+            target_commitish: '${{ github.sha }}',
+          })
+          return data.body
+   
+    - name: Create release
+      uses: ncipollo/release-action@v1
+      with:
+        artifacts: _artifacts/Sonarr.*
+        commit: ${{ github.sha }}
+        generateReleaseNotes: false
+        body: ${{ steps.generate-release-notes.outputs.result }}
+        name: ${{ inputs.version }}
+        tag: v${{ inputs.version }}
+  
+  docker:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.github_token }}
+
+      - name: Date
+        id: date
+        run: echo "::set-output name=BUILD_DATE::$(date '+%Y-%m-%dT%H:%M:%S%:z')"
+
+      - name: Get lowercase repository name
+        id: repo-name
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+
+#      - name: Publish to ghcr.io
+#        uses: docker/build-push-action@v6
+#        with:
+#          push: true
+#          context: ./dockerx64
+#          platforms: linux/amd64
+#          tags: |
+#            ghcr.io/${{ steps.repo-name.outputs.REPO }}:${{ inputs.branch == 'main' && 'latest' || inputs.branch }}
+#            ghcr.io/${{ steps.repo-name.outputs.REPO }}:v${{ inputs.version }}
+#          build-args: |
+#            VERSION=2.1
+#            SONARR_VERSION=${{ inputs.version }}
+#            BUILD_DATE=${{ steps.date.outputs.BUILD_DATE }}
+#          cache-from: type=gha
+#          cache-to: type=gha,mode=max
+
+      - name: Publish to ghcr.io
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: ./dockerarm64
+          platforms: linux/arm64
+          tags: |
+            ghcr.io/${{ steps.repo-name.outputs.REPO }}:${{ inputs.branch == 'main' && 'latest' || inputs.branch }}
+            ghcr.io/${{ steps.repo-name.outputs.REPO }}:v${{ inputs.version }}
+          build-args: |
+            VERSION=2.1
+            SONARR_VERSION=${{ inputs.version }}
+            BUILD_DATE=${{ steps.date.outputs.BUILD_DATE }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

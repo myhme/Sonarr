@@ -1,0 +1,89 @@
+name: Docker
+
+on:
+  workflow_dispatch:
+    inputs:
+      framework: 
+        description: '.net framework'
+        type: string
+        required: true
+        default: net6.0
+      branch:
+        description: 'Git branch used for this build'
+        type: string
+        required: true
+        default: main
+      major_version:
+        description: 'Sonarr major version'
+        type: string
+        required: true
+        default: 4
+      version:
+        description: 'Sonarr version'
+        type: string
+        required: true
+        default: 4.0.11.813
+
+jobs:
+ 
+  docker:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - name: Check out
+        uses: actions/checkout@v4
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login to ghcr.io
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.repository_owner }}
+          password: ${{ secrets.github_token }}
+
+      - name: Date
+        id: date
+        run: echo "::set-output name=BUILD_DATE::$(date '+%Y-%m-%dT%H:%M:%S%:z')"
+
+      - name: Get lowercase repository name
+        id: repo-name
+        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
+
+#      - name: Publish to ghcr.io
+#        uses: docker/build-push-action@v6
+#        with:
+#          push: true
+#          context: ./dockerx64
+#          platforms: linux/amd64
+#          tags: |
+#            ghcr.io/${{ steps.repo-name.outputs.REPO }}:${{ inputs.branch == 'main' && 'latest' || inputs.branch }}
+#            ghcr.io/${{ steps.repo-name.outputs.REPO }}:v${{ inputs.version }}
+#          build-args: |
+#            VERSION=2.1
+#            SONARR_VERSION=${{ inputs.version }}
+#            BUILD_DATE=${{ steps.date.outputs.BUILD_DATE }}
+#          cache-from: type=gha
+#          cache-to: type=gha,mode=max
+
+      - name: Publish to ghcr.io
+        uses: docker/build-push-action@v6
+        with:
+          push: true
+          context: ./dockerarm64
+          platforms: linux/arm64
+          tags: |
+            ghcr.io/${{ steps.repo-name.outputs.REPO }}:${{ inputs.branch == 'main' && 'latest' || inputs.branch }}
+            ghcr.io/${{ steps.repo-name.outputs.REPO }}:v${{ inputs.version }}
+          build-args: |
+            VERSION=2.1
+            SONARR_VERSION=${{ inputs.version }}
+            BUILD_DATE=${{ steps.date.outputs.BUILD_DATE }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
