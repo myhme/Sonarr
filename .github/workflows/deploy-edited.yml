@@ -86,9 +86,8 @@ jobs:
         tag: v${{ inputs.version }}
   
     - name: Sleep for 30 seconds
-      uses: jakejarvis/wait-action@master
-      with:
-        time: '30s'
+      run: sleep 30s
+      shell: bash
 
   docker-trigger:
     needs: release
