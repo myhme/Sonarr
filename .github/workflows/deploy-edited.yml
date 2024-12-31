@@ -85,65 +85,21 @@ jobs:
         name: ${{ inputs.version }}
         tag: v${{ inputs.version }}
   
-  docker:
+    - name: Sleep for 30 seconds
+      uses: jakejarvis/wait-action@master
+      with:
+        time: '30s'
+
+  docker-trigger:
     needs: release
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
     steps:
-      - name: Check out
-        uses: actions/checkout@v4
-
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login to ghcr.io
-        uses: docker/login-action@v3
-        with:
-          registry: ghcr.io
-          username: ${{ github.repository_owner }}
-          password: ${{ secrets.github_token }}
-
-      - name: Date
-        id: date
-        run: echo "::set-output name=BUILD_DATE::$(date '+%Y-%m-%dT%H:%M:%S%:z')"
-
-      - name: Get lowercase repository name
-        id: repo-name
-        run: echo "REPO=${GITHUB_REPOSITORY,,}" >> $GITHUB_OUTPUT
-
-#      - name: Publish to ghcr.io
-#        uses: docker/build-push-action@v6
-#        with:
-#          push: true
-#          context: ./dockerx64
-#          platforms: linux/amd64
-#          tags: |
-#            ghcr.io/${{ steps.repo-name.outputs.REPO }}:${{ inputs.branch == 'main' && 'latest' || inputs.branch }}
-#            ghcr.io/${{ steps.repo-name.outputs.REPO }}:v${{ inputs.version }}
-#          build-args: |
-#            VERSION=2.1
-#            SONARR_VERSION=${{ inputs.version }}
-#            BUILD_DATE=${{ steps.date.outputs.BUILD_DATE }}
-#          cache-from: type=gha
-#          cache-to: type=gha,mode=max
-
-      - name: Publish to ghcr.io
-        uses: docker/build-push-action@v6
-        with:
-          push: true
-          context: ./dockerarm64
-          platforms: linux/arm64
-          tags: |
-            ghcr.io/${{ steps.repo-name.outputs.REPO }}:${{ inputs.branch == 'main' && 'latest' || inputs.branch }}
-            ghcr.io/${{ steps.repo-name.outputs.REPO }}:v${{ inputs.version }}
-          build-args: |
-            VERSION=2.1
-            SONARR_VERSION=${{ inputs.version }}
-            BUILD_DATE=${{ steps.date.outputs.BUILD_DATE }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+      - name: docker trigger event
+        run: |
+          curl -L \
+            -X POST \
+            -H "Accept: application/vnd.github+json" \
+            -H "Authorization: Bearer ${{ secrets.REPOSITORY_ACCESS_TOKEN }}" \
+            -H "X-GitHub-Api-Version: 2022-11-28" \
+            https://api.github.com/repos/myhme/docker-sonarr/dispatches \
+            -d '{"event_type":"dispatch-event"}'
