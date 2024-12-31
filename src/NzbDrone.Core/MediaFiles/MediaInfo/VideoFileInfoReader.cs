@@ -65,12 +65,41 @@ namespace NzbDrone.Core.MediaFiles.MediaInfo
             try
             {
                 _logger.Debug("Getting media info from {0}", filename);
-                var ffprobeOutput = FFProbe.GetStreamJson(filename, ffOptions: new FFOptions { ExtraArguments = "-probesize 1000" });
+                var ffprobeOutput = FFProbe.GetStreamJson(filename, ffOptions: new FFOptions { ExtraArguments = "-probesize 50000" });
 
                 var analysis = FFProbe.AnalyseStreamJson(ffprobeOutput);
                 var primaryVideoStream = GetPrimaryVideoStream(analysis);
 
                 var mediaInfoModel = new MediaInfoModel();
+                mediaInfoModel.ContainerFormat = analysis.Format.FormatName;
+                mediaInfoModel.VideoFormat = primaryVideoStream?.CodecName;
+                mediaInfoModel.VideoCodecID = primaryVideoStream?.CodecTagString;
+                mediaInfoModel.VideoProfile = primaryVideoStream?.Profile;
+                mediaInfoModel.VideoBitrate = primaryVideoStream?.BitRate ?? 0;
+                mediaInfoModel.VideoBitDepth = GetPixelFormat(primaryVideoStream?.PixelFormat)?.Components.Min(x => x.BitDepth) ?? 8;
+                mediaInfoModel.VideoColourPrimaries = primaryVideoStream?.ColorPrimaries;
+                mediaInfoModel.VideoTransferCharacteristics = primaryVideoStream?.ColorTransfer;
+                mediaInfoModel.DoviConfigurationRecord = primaryVideoStream?.SideDataList?.Find(x => x.GetType().Name == nameof(DoviConfigurationRecordSideData)) as DoviConfigurationRecordSideData;
+                mediaInfoModel.Height = primaryVideoStream?.Height ?? 0;
+                mediaInfoModel.Width = primaryVideoStream?.Width ?? 0;
+                mediaInfoModel.AudioFormat = analysis.PrimaryAudioStream?.CodecName;
+                mediaInfoModel.AudioCodecID = analysis.PrimaryAudioStream?.CodecTagString;
+                mediaInfoModel.AudioProfile = analysis.PrimaryAudioStream?.Profile;
+                mediaInfoModel.AudioBitrate = analysis.PrimaryAudioStream?.BitRate ?? 0;
+                mediaInfoModel.RunTime = GetBestRuntime(analysis.PrimaryAudioStream?.Duration, primaryVideoStream?.Duration, analysis.Format.Duration);
+                mediaInfoModel.AudioStreamCount = analysis.AudioStreams.Count;
+                mediaInfoModel.AudioChannels = analysis.PrimaryAudioStream?.Channels ?? 0;
+                mediaInfoModel.AudioChannelPositions = analysis.PrimaryAudioStream?.ChannelLayout;
+                mediaInfoModel.VideoFps = primaryVideoStream?.FrameRate ?? 0;
+                mediaInfoModel.AudioLanguages = analysis.AudioStreams?.Select(x => x.Language)
+                    .Where(l => l.IsNotNullOrWhiteSpace())
+                    .ToList();
+                mediaInfoModel.Subtitles = analysis.SubtitleStreams?.Select(x => x.Language)
+                    .Where(l => l.IsNotNullOrWhiteSpace())
+                    .ToList();
+                mediaInfoModel.ScanType = "Progressive";
+                mediaInfoModel.RawStreamData = ffprobeOutput;
+                mediaInfoModel.SchemaRevision = CURRENT_MEDIA_INFO_SCHEMA_REVISION;
 
                 if (analysis.Format.Tags?.TryGetValue("title", out var title) ?? false)
                 {
@@ -80,11 +109,19 @@ namespace NzbDrone.Core.MediaFiles.MediaInfo
                 FFProbeFrames frames = null;
 
                 // if it looks like PQ10 or similar HDR, do a frame analysis to figure out which type it is
+                if (PqTransferFunctions.Contains(mediaInfoModel.VideoTransferCharacteristics))
+                {
+                    var frameOutput = FFProbe.GetFrameJson(filename, ffOptions: new () { ExtraArguments = $"-read_intervals \"%+#1\" -select_streams v:{primaryVideoStream?.Index ?? 0}" });
+                    mediaInfoModel.RawFrameData = frameOutput;
+
+                    frames = FFProbe.AnalyseFrameJson(frameOutput);
+                }
 
                 var streamSideData = primaryVideoStream?.SideDataList ?? new ();
                 var framesSideData = frames?.Frames?.Count > 0 ? frames?.Frames[0]?.SideDataList ?? new () : new ();
 
                 var sideData = streamSideData.Concat(framesSideData).ToList();
+                mediaInfoModel.VideoHdrFormat = GetHdrFormat(mediaInfoModel.VideoBitDepth, mediaInfoModel.VideoColourPrimaries, mediaInfoModel.VideoTransferCharacteristics, sideData);
 
                 return mediaInfoModel;
             }
