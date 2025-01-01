@@ -1,0 +1,21 @@
+name: Sync Fork
+
+on:
+  schedule:
+    - cron: '5 */6 * * *' # At minute 5 past every 6th hour..
+  workflow_dispatch: # on button click
+
+jobs:
+  sync:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: tgymnich/fork-sync@v2
+        with:
+          token: ${{ secrets.REPOSITORY_ACCESS_TOKEN }}
+          owner: Sonarr
+          base: main
+          head: main
+          auto_approve: true
+          auto_merge: true

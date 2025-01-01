@@ -37,8 +37,8 @@ namespace NzbDrone.Core.MediaFiles.EpisodeImport
 
             if (!fileRuntime.HasValue)
             {
-                _logger.Error("Failed to get runtime from the file, make sure ffprobe is available");
-                return DetectSampleResult.Indeterminate;
+                _logger.Debug("Failed to get runtime from the file, make sure ffprobe is available");
+                return DetectSampleResult.NotSample;
             }
 
             return IsSample(path, fileRuntime.Value, series.Runtime);
@@ -62,8 +62,8 @@ namespace NzbDrone.Core.MediaFiles.EpisodeImport
 
             if (localEpisode.MediaInfo == null)
             {
-                _logger.Error("Failed to get runtime from the file, make sure ffprobe is available");
-                return DetectSampleResult.Indeterminate;
+                _logger.Debug("Failed to get runtime from the file, make sure ffprobe is available");
+                return DetectSampleResult.NotSample;
             }
 
             return IsSample(localEpisode.Path, localEpisode.MediaInfo.RunTime, runtime);
