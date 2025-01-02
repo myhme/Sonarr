@@ -65,10 +65,16 @@ namespace NzbDrone.Core.MediaFiles.MediaInfo
             try
             {
                 _logger.Debug("Getting media info from {0}", filename);
-                var ffprobeOutput = FFProbe.GetStreamJson(filename, ffOptions: new FFOptions { ExtraArguments = "-probesize 50000" });
+                var ffprobeOutput = FFProbe.GetStreamJson(filename, ffOptions: new FFOptions { ExtraArguments = "-probesize 2000000" });
 
                 var analysis = FFProbe.AnalyseStreamJson(ffprobeOutput);
                 var primaryVideoStream = GetPrimaryVideoStream(analysis);
+
+                if (analysis.PrimaryAudioStream?.ChannelLayout.IsNullOrWhiteSpace() ?? true)
+                {
+                    ffprobeOutput = FFProbe.GetStreamJson(filename, ffOptions: new FFOptions { ExtraArguments = "-probesize 5000000 -analyzeduration 5000000" });
+                    analysis = FFProbe.AnalyseStreamJson(ffprobeOutput);
+                }
 
                 var mediaInfoModel = new MediaInfoModel();
                 mediaInfoModel.ContainerFormat = analysis.Format.FormatName;
