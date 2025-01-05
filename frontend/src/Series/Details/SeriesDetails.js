@@ -24,9 +24,10 @@ import { align, icons, kinds, sizes, sortDirections, tooltipPositions } from 'He
 import InteractiveImportModal from 'InteractiveImport/InteractiveImportModal';
 import OrganizePreviewModalConnector from 'Organize/OrganizePreviewModalConnector';
 import DeleteSeriesModal from 'Series/Delete/DeleteSeriesModal';
-import EditSeriesModalConnector from 'Series/Edit/EditSeriesModalConnector';
+import EditSeriesModal from 'Series/Edit/EditSeriesModal';
 import SeriesHistoryModal from 'Series/History/SeriesHistoryModal';
 import MonitoringOptionsModal from 'Series/MonitoringOptions/MonitoringOptionsModal';
+import SeriesGenres from 'Series/SeriesGenres';
 import SeriesPoster from 'Series/SeriesPoster';
 import { getSeriesStatusDetails } from 'Series/SeriesStatus';
 import QualityProfileNameConnector from 'Settings/Profiles/Quality/QualityProfileNameConnector';
@@ -38,7 +39,6 @@ import toggleSelected from 'Utilities/Table/toggleSelected';
 import SeriesAlternateTitles from './SeriesAlternateTitles';
 import SeriesDetailsLinks from './SeriesDetailsLinks';
 import SeriesDetailsSeasonConnector from './SeriesDetailsSeasonConnector';
-import SeriesGenres from './SeriesGenres';
 import SeriesTagsConnector from './SeriesTagsConnector';
 import styles from './SeriesDetails.css';
 
@@ -419,7 +419,7 @@ class SeriesDetails extends Component {
                         null
                     }
 
-                    <SeriesGenres genres={genres} />
+                    <SeriesGenres className={styles.genres} genres={genres} />
 
                     <span>
                       {runningYears}
@@ -709,7 +709,7 @@ class SeriesDetails extends Component {
             onModalClose={this.onSeriesHistoryModalClose}
           />
 
-          <EditSeriesModalConnector
+          <EditSeriesModal
             isOpen={isEditSeriesModalOpen}
             seriesId={id}
             onModalClose={this.onEditSeriesModalClose}

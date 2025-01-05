@@ -26,6 +26,7 @@ module.exports = (env) => {
   const config = {
     mode: isProduction ? 'production' : 'development',
     devtool: isProduction ? 'source-map' : 'eval-source-map',
+    target: 'web',
 
     stats: {
       children: false
@@ -51,8 +52,7 @@ module.exports = (env) => {
         'node_modules'
       ],
       alias: {
-        jquery: 'jquery/dist/jquery.min',
-        'react-middle-truncate': 'react-middle-truncate/lib/react-middle-truncate'
+        jquery: 'jquery/dist/jquery.min'
       },
       fallback: {
         buffer: false,
@@ -187,7 +187,7 @@ module.exports = (env) => {
                       loose: true,
                       debug: false,
                       useBuiltIns: 'entry',
-                      corejs: 3
+                      corejs: '3.39'
                     }
                   ]
                 ]

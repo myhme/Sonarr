@@ -12,7 +12,9 @@ interface Field {
   order: number;
   name: string;
   label: string;
-  value: boolean | number | string;
+  value: boolean | number | string | number[];
+  section: string;
+  hidden: 'hidden' | 'hiddenIfNotSet' | 'visible';
   type: string;
   advanced: boolean;
   privacy: string;

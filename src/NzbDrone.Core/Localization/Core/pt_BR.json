@@ -248,7 +248,7 @@
     "LastWriteTime": "Hora da última gravação",
     "Location": "Localização",
     "LogFilesLocation": "Os arquivos de log estão localizados em: {location}",
-    "Logs": "Logs",
+    "Logs": "Registros",
     "MaintenanceRelease": "Versão de manutenção: correções de bugs e outras melhorias. Consulte o Histórico de commit do Github para saber mais",
     "Manual": "Manual",
     "Message": "Mensagem",
@@ -2135,5 +2135,14 @@
     "CutoffNotMet": "Corte Não Alcançado",
     "Premiere": "Estreia",
     "Completed": "Completado",
-    "Menu": "Menu"
+    "Menu": "Menu",
+    "NotificationsSettingsWebhookHeaders": "Cabeçalhos",
+    "UpdatePath": "Caminho da Atualização",
+    "UpdateSeriesPath": "Atualizar Caminho da Série",
+    "MetadataKometaDeprecated": "Os arquivos Kometa não serão mais criados, o suporte será completamente removido na v5",
+    "MetadataKometaDeprecatedSetting": "Deprecado",
+    "IndexerSettingsFailDownloads": "Downloads com Falhas",
+    "IndexerSettingsFailDownloadsHelpText": "Durante o processamento de downloads concluídos, {appName} tratará esses tipos de arquivos selecionados como downloads com falha.",
+    "NotificationsTelegramSettingsIncludeInstanceName": "Incluir nome da instância no título",
+    "NotificationsTelegramSettingsIncludeInstanceNameHelpText": "Opcionalmente, inclua o nome da instância na notificação"
 }

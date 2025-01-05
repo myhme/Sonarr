@@ -54,10 +54,12 @@ export interface CustomFilter {
 export interface AppSectionState {
   isConnected: boolean;
   isReconnecting: boolean;
+  isSidebarVisible: boolean;
   version: string;
   prevVersion?: string;
   dimensions: {
     isSmallScreen: boolean;
+    isLargeScreen: boolean;
     width: number;
     height: number;
   };
@@ -70,6 +72,7 @@ interface AppState {
   captcha: CaptchaAppState;
   commands: CommandAppState;
   episodeFiles: EpisodeFilesAppState;
+  episodeHistory: HistoryAppState;
   episodes: EpisodesAppState;
   episodesSelection: EpisodesAppState;
   history: HistoryAppState;
