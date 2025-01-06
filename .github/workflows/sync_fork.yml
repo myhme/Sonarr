@@ -18,6 +18,7 @@ jobs:
           base: main
           head: main
           merge_method: merge
+          pr_message: 'Sync changes from upstream  to downstream'
           pr_title: Fork Sync
           auto_approve: true
           auto_merge: true
