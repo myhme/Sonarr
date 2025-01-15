@@ -91,7 +91,10 @@ namespace NzbDrone.Core.Test.ParserTests
         [TestCase("Series.Title.S08E03.720p.WEB.DL.AAC2.0.H.264.KCRT", "KCRT")]
         [TestCase("Series Title S02E05 2160p WEB-DL DV HDR ENG DDP5.1 Atmos H265 MP4-BEN THE MEN", "BEN THE MEN")]
         [TestCase("Series Title S02E05 2160p AMZN WEB-DL DV HDR10 PLUS DDP5 1 Atmos H265 MKV-BEN THE MEN-xpost", "BEN THE MEN")]
-        [TestCase("Series.S01E05.1080p.WEB-DL.DDP5.1.H264-BEN.THE.MEN", "BEN.THE.MEN")]
+        [TestCase("Series Title Season S01 1080p WEBRip x265 DUAL DDP5.1 MSub - SP3LL -", "SP3LL")]
+        [TestCase("Series Title Season S01 1080p WEBRip x265 DUAL DDP5.1 MSub - Telly", "Telly")]
+        [TestCase("Series Title Season S01 1080p WEBRip x265 DUAL DDP5.1 MSub - themoviesboss", "themoviesboss")]
+        [TestCase("Series Title Season S01 1080p WEBRip x265 DUAL DDP5.1 MSub  By Full4Movies -", "Full4Movies")]
         public void should_parse_exception_release_group(string title, string expected)
         {
             Parser.Parser.ParseReleaseGroup(title).Should().Be(expected);
